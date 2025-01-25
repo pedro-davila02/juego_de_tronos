@@ -1,26 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/character_provider.dart';
+import '../services/api_service.dart';
+import '../models/character.dart';
 
-class FeaturedScreen extends StatelessWidget {
+class FeaturedScreen extends StatefulWidget {
+  @override
+  _FeaturedScreenState createState() => _FeaturedScreenState();
+}
+
+class _FeaturedScreenState extends State<FeaturedScreen> {
+  Character? _character;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRandomCharacter();
+  }
+
+  void _fetchRandomCharacter() async {
+    final character = await ApiService().getRandomCharacter();
+    setState(() {
+      _character = character;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CharacterProvider>(context);
-
     return Scaffold(
-      appBar: AppBar(title: Text('Destacado')),
-      body: provider.randomCharacter == null
+      appBar: AppBar(title: Text('Personaje Destacado')),
+      body: _character == null
           ? Center(child: CircularProgressIndicator())
-          : Center(
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(provider.randomCharacter!.name),
-                  Text(provider.randomCharacter!.gender),
-                  Text(provider.randomCharacter!.culture),
+                  Text(
+                    _character!.name,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  SizedBox(height: 8),
+                  Text('Cultura: ${_character!.culture}'),
+                  Text('Nacido: ${_character!.born}'),
+                  SizedBox(height: 16),
+                  Text('Alias:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  for (var alias in _character!.aliases) Text('- $alias'),
                 ],
               ),
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _fetchRandomCharacter,
+        child: Icon(Icons.refresh),
+      ),
     );
   }
 }
