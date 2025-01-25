@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/character.dart';
-import '../providers/character_provider.dart';
+import '../providers/favorite_provider.dart';
 
 class DetailScreen extends StatelessWidget {
   final Character character;
@@ -10,22 +10,34 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CharacterProvider>(context);
+    final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final isFavorite = favoriteProvider.isFavorite(character);
 
     return Scaffold(
       appBar: AppBar(title: Text(character.name)),
-      body: Column(
-        children: [
-          Text(character.name),
-          Text(character.gender),
-          Text(character.culture),
-          ElevatedButton(
-            onPressed: () {
-              provider.addToFavorites(character);
-            },
-            child: Text('Añadir a Favoritos'),
-          ),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(character.name,
+                style: Theme.of(context).textTheme.headlineMedium),
+            SizedBox(height: 8),
+            Text('Cultura: ${character.culture}'),
+            Text('Nacido: ${character.born}'),
+            SizedBox(height: 16),
+            Text('Alias:', style: TextStyle(fontWeight: FontWeight.bold)),
+            for (var alias in character.aliases) Text('- $alias'),
+            Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                favoriteProvider.toggleFavorite(character);
+              },
+              child: Text(
+                  isFavorite ? 'Eliminar de Favoritos' : 'Agregar a Favoritos'),
+            ),
+          ],
+        ),
       ),
     );
   }
