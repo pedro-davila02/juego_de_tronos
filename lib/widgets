@@ -1,0 +1,25 @@
+import 'package:flutter/material.dart';
+import '../models/character.dart';
+import '../screens/detail_screen.dart';
+
+class CharacterCard extends StatelessWidget {
+  final Character character;
+
+  CharacterCard({required this.character});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(character.name),
+      subtitle: Text(character.culture),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailScreen(character: character),
+          ),
+        );
+      },
+    );
+  }
+}
