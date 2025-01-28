@@ -15,7 +15,8 @@ class FavoritesScreen extends StatelessWidget {
           : ListView.builder(
               itemCount: favorites.length,
               itemBuilder: (context, index) {
-                return CharacterCard(character: favorites[index]);
+                final character = favorites[index];
+                return CharacterCard(character: character);
               },
             ),
     );
