@@ -1,106 +1,89 @@
 import 'package:flutter/material.dart';
 import '../models/character.dart';
 import '../services/api_service.dart';
-import '../widgets/character_card.dart';
+import 'detail_screen.dart';
 
 class ListScreen extends StatefulWidget {
+  const ListScreen({Key? key}) : super(key: key);
+
   @override
   _ListScreenState createState() => _ListScreenState();
 }
 
 class _ListScreenState extends State<ListScreen> {
+  final ApiService _apiService = ApiService();
+  final ScrollController _scrollController = ScrollController();
+  List<Character> _characters = [];
   int _page = 1;
   bool _isLoading = false;
-  bool _hasMore = true; // Para saber si hay más datos por cargar
-  List<Character> _characters = [];
-  final ScrollController _scrollController = ScrollController();
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
     _fetchCharacters();
-
-    // Escuchar el desplazamiento del ScrollController
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent &&
-          !_isLoading &&
-          _hasMore) {
-        _fetchCharacters();
-      }
-    });
+    _scrollController.addListener(_onScroll);
   }
 
   Future<void> _fetchCharacters() async {
-    if (_isLoading) return;
+    if (_isLoading || !_hasMore) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      final characters =
-          await ApiService().getCharacters(page: _page, pageSize: 10);
-
-      setState(() {
-        if (characters.isEmpty) {
-          _hasMore = false; // No hay más datos por cargar
-        } else {
-          _characters.addAll(characters);
-          _page++;
-        }
-      });
-    } catch (e) {
-      print('Error al cargar personajes: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    final newCharacters =
+        await _apiService.getCharacters(page: _page, pageSize: 10);
+    setState(() {
+      _isLoading = false;
+      _characters.addAll(newCharacters);
+      _hasMore = newCharacters.isNotEmpty;
+      _page++;
+    });
   }
 
-  @override
-  void dispose() {
-    _scrollController
-        .dispose(); // Liberar el controlador al eliminar la pantalla
-    super.dispose();
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
+        !_isLoading) {
+      _fetchCharacters();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Lista de Personajes')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: _characters.length + (_hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < _characters.length) {
-                  return CharacterCard(character: _characters[index]);
-                } else {
-                  // Mostrar un indicador de carga al final
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-          if (_isLoading && _characters.isEmpty)
-            // Mostrar un indicador de carga inicial si aún no hay datos
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-        ],
+      appBar: AppBar(title: const Text('Todos los personajes')),
+      body: ListView.builder(
+        controller: _scrollController,
+        itemCount: _characters.length + (_hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _characters.length) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final character = _characters[index];
+          return ListTile(
+            title: Text(
+                character.name.isNotEmpty ? character.name : 'Desconocido'),
+            subtitle: Text(
+                'Alias: ${character.alias.isNotEmpty ? character.alias : 'Desconocido'}'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailScreen(character: character),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }
