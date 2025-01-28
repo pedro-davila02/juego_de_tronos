@@ -35,15 +35,22 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _character!.name,
+                    _character!.name.isNotEmpty
+                        ? _character!.name
+                        : 'Desconocido',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   SizedBox(height: 8),
-                  Text('Cultura: ${_character!.culture}'),
-                  Text('Nacido: ${_character!.born}'),
+                  Text(
+                      'Cultura: ${_character!.culture.isNotEmpty ? _character!.culture : 'Desconocido'}'),
+                  Text(
+                      'Nacido: ${_character!.born.isNotEmpty ? _character!.born : 'Desconocido'}'),
                   SizedBox(height: 16),
                   Text('Alias:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  for (var alias in _character!.aliases) Text('- $alias'),
+                  if (_character!.aliases.isNotEmpty)
+                    for (var alias in _character!.aliases) Text('- $alias')
+                  else
+                    Text('Desconocido'),
                 ],
               ),
             ),
